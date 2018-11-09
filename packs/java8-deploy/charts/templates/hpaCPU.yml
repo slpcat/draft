@@ -1,0 +1,14 @@
+{{- if .Values.hpaCPU.enabled -}}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name:  {{ template "fullname" . }}
+spec:
+  scaleTargetRef:
+    apiVersion: v1
+    kind: Deployment
+    name: {{ template "fullname" . }}
+  minReplicas: {{ .Values.hpaCPU.minReplicas }}
+  maxReplicas: {{ .Values.hpaCPU.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.hpaCPU.targetCPUUtilizationPercentage }}
+{{- end -}}
