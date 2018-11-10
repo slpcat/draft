@@ -1,14 +1,31 @@
 {{- if .Values.hpaCPU.enabled -}}
-apiVersion: autoscaling/v1
-kind: HorizontalPodAutoscaler
+apiVersion: v1
+kind: List
 metadata:
-  name:  {{ template "fullname" . }}
-spec:
-  scaleTargetRef:
-    apiVersion: v1
-    kind: Deployment
+  resourceVersion: ""
+  selfLink: ""
+items:
+- apiVersion: autoscaling/v2beta2
+  kind: HorizontalPodAutoscaler
+  metadata:
     name: {{ template "fullname" . }}
-  minReplicas: {{ .Values.hpaCPU.minReplicas }}
-  maxReplicas: {{ .Values.hpaCPU.maxReplicas }}
-  targetCPUUtilizationPercentage: {{ .Values.hpaCPU.targetCPUUtilizationPercentage }}
+    labels:
+      draft: {{ default "draft-app" .Values.draft }}
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+  spec:
+    scaleTargetRef:
+      apiVersion: extensions/v1beta1
+      kind: Deployment
+      name: {{ template "fullname" . }}
+    minReplicas: {{ .Values.hpaCPU.minReplicas }}
+    maxReplicas: {{ .Values.hpaCPU.maxReplicas }}
+    metrics:
+    #各种指标参数要依据压力测试结果而定
+    - type: Resource
+      resource:
+    #根据CPU占用率进行缩放
+        name: cpu
+        target:
+          averageUtilization: {{ .Values.hpaCPU.targetCPUUtilizationPercentage }}
+          type: Utilization
 {{- end -}}
