@@ -1,31 +1,26 @@
 {{- if .Values.hpaCPU.enabled -}}
-apiVersion: v1
-kind: List
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
 metadata:
-  resourceVersion: ""
-  selfLink: ""
-items:
-- apiVersion: autoscaling/v2beta2
-  kind: HorizontalPodAutoscaler
-  metadata:
+  #命名规范:应用名称-版本
+  name: {{ template "fullname" . }}
+  labels:
+    draft: {{ default "draft-app" .Values.draft }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
     name: {{ template "fullname" . }}
-    labels:
-      draft: {{ default "draft-app" .Values.draft }}
-      chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-  spec:
-    scaleTargetRef:
-      apiVersion: extensions/v1beta1
-      kind: Deployment
-      name: {{ template "fullname" . }}
-    minReplicas: {{ .Values.hpaCPU.minReplicas }}
-    maxReplicas: {{ .Values.hpaCPU.maxReplicas }}
-    metrics:
-    #各种指标参数要依据压力测试结果而定
-    - type: Resource
-      resource:
-    #根据CPU占用率进行缩放
-        name: cpu
-        target:
-          averageUtilization: {{ .Values.hpaCPU.targetCPUUtilizationPercentage }}
-          type: Utilization
+  minReplicas: {{ .Values.hpaCPU.minReplicas }}
+  maxReplicas: {{ .Values.hpaCPU.maxReplicas }}
+  metrics:
+  #各种指标参数要依据压力测试结果而定
+  - type: Resource
+    resource:
+  #根据CPU占用率进行缩放
+      name: cpu
+      target:
+        averageUtilization: {{ .Values.hpaCPU.targetCPUUtilizationPercentage }}
+        type: Utilization
 {{- end -}}
